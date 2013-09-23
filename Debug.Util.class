@@ -1,0 +1,55 @@
+Option Explicit
+
+'! Debug Util Class
+'!
+'! @author  miyamiya <rai.caver@gmail.com>
+'! @date    2013/09/24
+Class DebugUtil
+
+    '! Start Time
+    '!
+    '! @var start_time         Dictionary Object
+    Private start_time
+
+    '! Start Point is set
+    '!
+    '! @param  theName     string keyname
+    '! @return void
+    Public Property Let setTime(byval theName)
+        start_time.add theName, Timer()
+    End Property
+
+    '! The time from the starting point is returned. 
+    '!
+    '! @param  theName     string keyname
+    '! @return void
+    Public Function putRunTime(byval theName)
+        Dim s, e, r
+        s = start_time.item(theName)
+        e = Timer()
+        r = (86400 - s) + e
+        If e >= s Then
+            r = e - s
+        End If
+        putRunTime = r
+    End Function
+
+    '--- Private Method ---
+
+    '! constructor
+    '!
+    '! @param  void
+    '! @return void
+    Private Sub Class_Initialize()
+        Set start_time = CreateObject("Scripting.Dictionary")
+    End Sub
+
+    '! destructor
+    '!
+    '! @param  void
+    '! @return void
+    Private Sub Class_Terminate()
+        Set start_time = Nothing
+    End Sub
+
+End Class
