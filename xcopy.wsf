@@ -1,0 +1,200 @@
+<?XML version="" standalone="yes" ?>
+<package>
+  <job id="filecopy">
+    <runtime>
+      <description>
+Copy SOURCE to DEST.
+ # Used xcopy command.
+ # WSH version over 5.6.
+      </description>
+      <unnamed
+        name       = "/s:SOURCE_PATH"
+        helpstring = "Source directory."
+        many       = "false"
+        required   = "true"
+       />
+      <unnamed
+        name       = "/d:DEST_PATH"
+        helpstring = "Destination directory."
+        many       = "false"
+        required   = "true"
+       />
+      <unnamed
+        name       = "/log:LOG_FILE"
+        helpstring = "Log file Path."
+        many       = "false"
+        required   = "false"
+       />
+      <unnamed
+        name       = "/t"
+        helpstring = "test run."
+        many       = "false"
+        required   = "false"
+       />
+      <unnamed
+        name       = "/q"
+        helpstring = "put xcopy into quiet mode"
+        many       = "false"
+        required   = "false"
+       />
+      <unnamed
+        name       = "/v"
+        helpstring = "verify."
+        many       = "false"
+        required   = "false"
+       />
+      <example>
+Example:
+
+  'default
+  cscript //nologo xcopy_tool.wsf /s:C:\dmpdir /d:D:backup
+
+  'add option
+  cscript //nologo xcopy_tool.wsf /s:C:\dmpdir /d:D:backup /q /v
+
+  'log output to a file
+  cscript //nologo xcopy_tool.wsf /s:C:\dmpdir /d:D:backup /log:C:\logdir
+
+  'test mode
+  cscript //nologo xcopy_tool.wsf /s:C:\dmpdir /d:D:backup /t
+      </example>
+
+    </runtime>
+    <object id="f"     progid="Scripting.FileSystemObject" />
+    <object id="shell" progid="WScript.Shell" />
+    <script language="VBScript" src="lib/DateTime.Util.class"></script>
+    <script language="VBScript">
+    <![CDATA[
+    Dim cp : Set cp = New Xcopy
+    If (cp.doInitialize(WScript.Arguments) = False) Then
+        Set cp = Nothing
+        WScript.Quit
+    End If
+    Call cp.Run
+    Set cp = Nothing
+
+    Class Xcopy
+        '
+        '! Process
+        '!
+        '!@param  void
+        '!@return void
+        Public Function Run()
+            Dim opt, cmd, result
+            opt = " /d /e /f /h /i /k /r /y"
+            If (ArgT) Then opt = opt & " /l"
+            If (ArgV) Then opt = opt & " /v"
+            If (ArgQ) Then opt = opt & " /q"
+        
+            cmd = "xcopy " & Args & " " & ArgD & opt
+            nLog("START -> " & cmd)
+            Set result = shell.Exec(cmd) : With result
+                Do Until .StdOut.AtEndOfStream
+                    nLog(.StdOut.ReadLine)
+                Loop
+                Do Until .StdErr.AtEndOfStream
+                    eLog(.StdErr.ReadLine)
+                Loop
+            End With
+            endflg = True
+        End Function
+
+        '
+        '! Initialize
+        '!
+        '!@param  theArgs    WScript.Arguments Object
+        '!@return            True: Success, False: Error
+        Public Function doInitialize(theArgs)
+            doInitialize = True
+            With theArgs
+                If (WScript.Version < 5.6) Then
+                    eLog("This script is over Ver.5.6")
+                    endflg = True : doInitialize = False
+                    Exit Function
+                End If
+                If (.Named.Exists("Log") = True And f.FolderExists(f.GetParentFolderName(.Named.Item("Log"))) = False) Then
+                    eLog("Logfile Directory Not Found. -> "& .Named.Item("Log"))
+                    endflg = True : doInitialize = False
+                    Exit Function
+                End If
+                ArgLog = .Named.Exists("Log")
+                If (ArgLog = True) Then
+                    Set log = f.OpenTextFile(.Named.Item("Log"), 8, True)
+                End If
+                If (.Named.Exists("s") = False or .Named.Exists("s") = False) Then
+                    nLog(theArgs.ShowUsage)
+                    endflg = True : doInitialize = False
+                    Exit Function
+                End If
+                If (f.FileExists(.Named.Item("s")) = False And f.FolderExists(.Named.Item("s")) = False) Then
+                    eLog("Source Directory Not Found. -> "& .Named.Item("s"))
+                    endflg = True : doInitialize = False
+                End If
+                If (f.FolderExists(.Named.Item("d")) = False) Then
+                    eLog("Destination Directory Not Found. -> "& .Named.Item("d"))
+                    endflg = True : doInitialize = False
+                End If
+                ArgS   = .Named.Item("s")
+                ArgD   = .Named.Item("d")
+                ArgT   = .Named.Exists("t")
+                ArgV   = .Named.Exists("v")
+                ArgQ   = .Named.Exists("q")
+            End With
+        End Function
+
+        ' arguments
+        Private ArgS   'source
+        Private ArgD   'destination
+        Private ArgT   'test run
+        Private ArgV   'verify
+        Private ArgQ   'quiet mode
+        Private ArgLog 'LogMode
+
+        ' objects
+        Private f, shell, log, datetime
+
+        ' member values
+        Private endflg
+
+        '
+        '! Write Error Log
+        '!
+        '!@param  theMsg   Message String
+        Private Function eLog(theMsg)
+            nLog("[ ERROR ] " & theMsg)
+        End Function
+
+        '
+        '! Write Log
+        '!
+        '!@param  theMsg   Message String
+        Private Function nLog(theMsg)
+            log.WriteLine("[" & datetime.getDateTime() & "] " & theMsg)
+        End Function
+
+        Private Sub Class_Initialize
+            Set f        = CreateObject("Scripting.FileSystemObject")
+            Set shell    = CreateObject("WScript.Shell")
+            Set log      = WScript.StdOut
+            Set datetime = New DateTimeUtil
+            datetime.setTime = "first"
+            endflg = False
+        End Sub
+
+        Private Sub Class_Terminate
+            If (endflg = False) Then
+                eLog("unexpected error.")
+            End If
+            nLog("<- END")
+            nLog("ALL Time: " & Round(datetime.putRunTime("first"), 5) & "sec")
+            log.Close
+            Set log      = Nothing
+            Set datetime = Nothing
+            Set shell    = Nothing
+            Set f        = Nothing
+        End Sub
+    End Class
+    ]]>
+    </script>
+  </job>
+</package>
