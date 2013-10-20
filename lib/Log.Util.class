@@ -1,0 +1,102 @@
+Option Explicit
+
+'! Log Util Class
+'!
+'! @author  miyamiya <rai.caver@gmail.com>
+'! @date    2013/10/20
+Class LogUtil
+
+    '! Logfile Setting
+    '!
+    '! @param  theName     string->filename
+    '! @return void
+    Public Property Let setLogfile(byval theName)
+        If (f.FolderExists(f.GetParentFolderName(theName))) Then
+            Set l = f.OpenTextFile(theName, 8, True)
+        End If
+    End Property
+
+    '! Separator character
+    '!
+    '! @param  theName     string->Separator
+    '! @return void
+    Public Property Let setSeparator(byval theChar)
+        sep = theChar
+    End Property
+
+    '
+    '! Write Error Log
+    '!
+    '!@param  theMsg   Message String
+    Public Function eLog(theMsg)
+        write("[ERROR]" & sep & theMsg)
+    End Function
+
+    '
+    '! Write Warning Log
+    '!
+    '!@param  theMsg   Message String
+    Public Function wLog(theMsg)
+        write("[WARN]" & sep &  theMsg)
+    End Function
+
+    '
+    '! Write Notice Log
+    '!
+    '!@param  theMsg   Message String
+    Public Function nLog(theMsg)
+        write("[NOTICE]" & sep &  theMsg)
+    End Function
+
+    '
+    '! Write Log
+    '!
+    '!@param  theMsg   Message String
+    Public Function none(theMsg)
+        write(sep & theMsg)
+    End Function
+
+    '
+    '! Write Log
+    '!
+    '!@param  theMsg   Message String
+    Private Function write(theMsg)
+        Dim t : t = CDbl(Timer)
+        t = Fix((t - Fix(t)) * 1000)
+        Do While (Len(t) < 3)
+            t = t & "0"
+        Loop
+        l.WriteLine("[" & Now & "." & t & "]" & sep & theMsg)
+    End Function
+
+
+    '
+    '! Scripting.FileSystemObject
+    '!
+    '! @var  f   Scripting.FileSystemObject
+    Private f
+
+    '
+    '! log object
+    '!
+    '! @var l    WScript.StdOut or TextStream
+    Private l
+
+    '
+    '! Separator
+    '!
+    '! @var sep  string->Separator(default space)
+    Private sep
+
+    Private Sub Class_Initialize
+        Set f = CreateObject("Scripting.FileSystemObject")
+        Set l = WScript.StdOut
+        sep = " "
+    End Sub
+
+    Private Sub Class_Terminate
+        l.Close
+        Set l = Nothing
+        Set f = Nothing
+    End Sub
+End Class
