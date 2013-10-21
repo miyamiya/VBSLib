@@ -90,7 +90,13 @@ Example:
         
             cmd = "xcopy " & Args & " " & ArgD & opt
             l.none("START -> " & cmd)
-            Set result = shell.Exec(cmd) : With result
+            On Error Resume Next
+            Set result = shell.Exec(cmd)
+            If (isError()) Then
+                Exit Function
+            End If
+            On Error Goto 0
+            With result
                 Do Until .StdOut.AtEndOfStream
                     l.none(.StdOut.ReadLine)
                 Loop
@@ -127,14 +133,6 @@ Example:
                     l.none(theArgs.ShowUsage)
                     endflg = True : doInitialize = False
                     Exit Function
-                End If
-                If (f.FileExists(.Named.Item("s")) = False And f.FolderExists(.Named.Item("s")) = False) Then
-                    l.eLog("Source Directory Not Found. -> "& .Named.Item("s"))
-                    endflg = True : doInitialize = False
-                End If
-                If (f.FolderExists(.Named.Item("d")) = False) Then
-                    l.eLog("Destination Directory Not Found. -> "& .Named.Item("d"))
-                    endflg = True : doInitialize = False
                 End If
                 ArgS   = .Named.Item("s")
                 ArgD   = .Named.Item("d")
@@ -181,6 +179,18 @@ Example:
             Set shell    = Nothing
             Set f        = Nothing
         End Sub
+
+        '! Is Error
+        '!
+        '!@param  void
+        '!@return            boolean:True->Error, False->No Error
+        Private Function isError()
+            isError = False
+            If (Err.Number <> 0) Then
+                l.eLog(Err.Description & "(" & Err.Number & ")")
+                isError = True
+            End If
+        End Function
     End Class
     ]]>
     </script>
