@@ -48,16 +48,16 @@ Copy SOURCE to DEST.
 Example:
 
   'default
-  cscript //nologo xcopy_tool.wsf /s:C:\dmpdir /d:D:backup
+  cscript //nologo xcopy.wsf /s:C:\dmpdir /d:D:backup
 
   'add option
-  cscript //nologo xcopy_tool.wsf /s:C:\dmpdir /d:D:backup /q /v
+  cscript //nologo xcopy.wsf /s:C:\dmpdir /d:D:backup /q /v
 
   'log output to a file
-  cscript //nologo xcopy_tool.wsf /s:C:\dmpdir /d:D:backup /log:C:\logdir
+  cscript //nologo xcopy.wsf /s:C:\dmpdir /d:D:backup /log:C:\logdir
 
   'test mode
-  cscript //nologo xcopy_tool.wsf /s:C:\dmpdir /d:D:backup /t
+  cscript //nologo xcopy.wsf /s:C:\dmpdir /d:D:backup /t
       </example>
 
     </runtime>
