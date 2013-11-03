@@ -61,137 +61,28 @@ Example:
       </example>
 
     </runtime>
-    <object id="f"     progid="Scripting.FileSystemObject" />
-    <object id="shell" progid="WScript.Shell" />
+    <script language="VBScript" src="lib/CommandExec.class"></script>
     <script language="VBScript" src="lib/DateTime.Util.class"></script>
     <script language="VBScript" src="lib/Log.Util.class"></script>
+    <script language="VBScript" src="lib/Xcopy.Command.class"></script>
     <script language="VBScript">
     <![CDATA[
-    Dim cp : Set cp = New Xcopy
-    If (cp.doInitialize(WScript.Arguments) = False) Then
-        Set cp = Nothing
-        WScript.Quit
-    End If
-    Call cp.Run
-    Set cp = Nothing
+    Dim cmdexec: Set cmdexec = New CommandExec
+    Dim xcopy  : Set xcopy   = New XcopyCommand
+    Dim log    : Set log     = New LogUtil
 
-    Class Xcopy
-        '
-        '! Process
-        '!
-        '!@param  void
-        '!@return void
-        Public Function Run()
-            Dim opt, cmd, result
-            opt = " /d /e /f /h /i /k /r /y"
-            If (ArgT) Then opt = opt & " /l"
-            If (ArgV) Then opt = opt & " /v"
-            If (ArgQ) Then opt = opt & " /q"
-        
-            cmd = "xcopy " & Args & " " & ArgD & opt
-            l.none("START -> " & cmd)
-            On Error Resume Next
-            Set result = shell.Exec(cmd)
-            If (isError()) Then
-                Exit Function
-            End If
-            On Error Goto 0
-            With result
-                Do Until .StdOut.AtEndOfStream
-                    l.none(.StdOut.ReadLine)
-                Loop
-                Do Until .StdErr.AtEndOfStream
-                    l.eLog(.StdErr.ReadLine)
-                Loop
-            End With
-            endflg = True
-        End Function
-
-        '
-        '! Initialize
-        '!
-        '!@param  theArgs    WScript.Arguments Object
-        '!@return            True: Success, False: Error
-        Public Function doInitialize(theArgs)
-            doInitialize = True
-            With theArgs
-                If (WScript.Version < 5.6) Then
-                    l.eLog("This script is over Ver.5.6")
-                    endflg = True : doInitialize = False
-                    Exit Function
-                End If
-                If (.Named.Exists("Log") = True And f.FolderExists(f.GetParentFolderName(.Named.Item("Log"))) = False) Then
-                    l.eLog("Logfile Directory Not Found. -> "& .Named.Item("Log"))
-                    endflg = True : doInitialize = False
-                    Exit Function
-                End If
-                ArgLog = .Named.Exists("Log")
-                If (ArgLog = True) Then
-                    l.setLogfile = .Named.Item("Log")
-                End If
-                If (.Named.Exists("s") = False or .Named.Exists("s") = False) Then
-                    l.none(theArgs.ShowUsage)
-                    endflg = True : doInitialize = False
-                    Exit Function
-                End If
-                ArgS   = .Named.Item("s")
-                ArgD   = .Named.Item("d")
-                ArgT   = .Named.Exists("t")
-                ArgV   = .Named.Exists("v")
-                ArgQ   = .Named.Exists("q")
-            End With
-        End Function
-
-        ' arguments
-        Private ArgS   'source
-        Private ArgD   'destination
-        Private ArgT   'test run
-        Private ArgV   'verify
-        Private ArgQ   'quiet mode
-        Private ArgLog 'LogMode
-
-        ' objects
-        Private f        'FileSystemObject
-        Private shell    'WScript.Shell
-        Private l        'Log Util
-        Private datetime 'DateTime Util
-
-        ' member values
-        Private endflg
-
-        Private Sub Class_Initialize
-            Set f        = CreateObject("Scripting.FileSystemObject")
-            Set shell    = CreateObject("WScript.Shell")
-            Set l        = New LogUtil
-            Set datetime = New DateTimeUtil
-            datetime.setTime = "first"
-            endflg = False
-        End Sub
-
-        Private Sub Class_Terminate
-            If (endflg = False) Then
-                l.eLog("unexpected error.")
-            End If
-            l.none("<- END")
-            l.none("ALL Time: " & Round(datetime.putRunTime("first"), 5) & "sec")
-            Set l        = Nothing
-            Set datetime = Nothing
-            Set shell    = Nothing
-            Set f        = Nothing
-        End Sub
-
-        '! Is Error
-        '!
-        '!@param  void
-        '!@return            boolean:True->Error, False->No Error
-        Private Function isError()
-            isError = False
-            If (Err.Number <> 0) Then
-                l.eLog(Err.Description & "(" & Err.Number & ")")
-                isError = True
-            End If
-        End Function
-    End Class
+    With WScript.Arguments
+        If (.Named.Exists("Log") = True) Then
+            log.setLogfile = .Named.Item("Log")
+        End If
+        xcopy.setSourceDir(.Named.Item("s"))
+        xcopy.setDestDir(.Named.Item("d"))
+        xcopy.setDebugFlg(.Named.Exists("t"))
+        xcopy.setVerifyFlg(.Named.Exists("v"))
+        xcopy.setQuietFlg(.Named.Exists("q"))
+    End With
+    cmdexec.setLog(log)
+    cmdexec.doCommand(xcopy.genCommand())
     ]]>
     </script>
   </job>
