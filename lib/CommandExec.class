@@ -1,0 +1,101 @@
+Option Explicit
+
+' Require DateTimeUtil
+' Require LogUtil
+
+'! Command Run Class
+'!
+'! @author  miyamiya <rai.caver@gmail.com>
+'! @date    2013/11/04
+Class CommandExec
+    '
+    '! Setting Log info
+    '!
+    '!@param  theLogfile    mixed:file path or LogUtil Object
+    '!@return void
+    Public Function setLog(theLog)
+        If (IsObject(theLog) = True) Then
+            Set log = theLog
+            Exit Function
+        End If
+
+        If (f.FolderExists(f.GetParentFolderName(theLog)) = False) Then
+            log.eLog("Logfile Directory Not Found. -> "& theLog)
+            endflg = True
+            Exit Function
+        End If
+        log.setLogfile = theLog
+        setLog = True
+    End Function
+
+    '
+    '! Process
+    '!
+    '!@param  theCmd      String:command
+    '!@return void
+    Public Function doCommand(theCmd)
+        Dim result
+        endflg = False
+        log.none("START -> " & theCmd)
+        On Error Resume Next
+        Set result = shell.Exec(theCmd)
+        If (isError()) Then
+            Exit Function
+        End If
+        On Error Goto 0
+        With result
+            Do Until .StdOut.AtEndOfStream
+                log.none(.StdOut.ReadLine)
+            Loop
+            Do Until .StdErr.AtEndOfStream
+                log.eLog(.StdErr.ReadLine)
+            Loop
+        End With
+        endflg = True
+    End Function
+
+    Private f        'FileSystemObject
+    Private shell    'WScript.Shell
+    Private log      'Log Util
+    Private datetime 'DateTime Util
+    Private endflg   'End
+
+    Private Sub Class_Initialize
+        Set f        = CreateObject("Scripting.FileSystemObject")
+        Set shell    = CreateObject("WScript.Shell")
+        Set log      = New LogUtil
+        Set datetime = New DateTimeUtil
+        datetime.setTime = "first"
+        endflg  = False
+
+        If (WScript.Version < 5.6) Then
+            log.eLog("This script is over WScript.Version .5.6")
+            endflg = True
+            WScript.Quit
+        End If
+    End Sub
+
+    Private Sub Class_Terminate
+        If (endflg = False) Then
+            log.eLog("unexpected error.")
+        End If
+        log.none("<- END")
+        log.none("ALL Time: " & Round(datetime.putRunTime("first"), 5) & "sec")
+        Set log      = Nothing
+        Set datetime = Nothing
+        Set shell    = Nothing
+        Set f        = Nothing
+    End Sub
+
+    '! Is Error
+    '!
+    '!@param  void
+    '!@return            boolean:True->Error, False->No Error
+    Private Function isError()
+        isError = False
+        If (Err.Number <> 0) Then
+            log.eLog(Err.Description & "(" & Err.Number & ")")
+            isError = True
+        End If
+    End Function
+End Class

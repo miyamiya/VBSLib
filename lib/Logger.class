@@ -1,14 +1,14 @@
 Option Explicit
 
-'! Log Util Class
+'! Logger Class
 '!
 '! @author  miyamiya <rai.caver@gmail.com>
-'! @date    2013/10/20
-Class LogUtil
+'! @date    2013/11/04
+Class Logger
 
     '! Logfile Setting
     '!
-    '! @param  theName     string->filename
+    '! @param  theName     string:filename
     '! @return void
     Public Property Let setLogfile(byval theName)
         If (f.FolderExists(f.GetParentFolderName(theName))) Then
@@ -68,7 +68,6 @@ Class LogUtil
         Loop
         l.WriteLine("[" & Now & "." & t & "]" & sep & theMsg)
     End Function
-
 
     '
     '! Scripting.FileSystemObject

@@ -1,0 +1,83 @@
+'! Generate Xcopy command
+'!
+'! @author  miyamiya <rai.caver@gmail.com>
+'! @date    2013/11/04
+Class XcopyCommand
+    '
+    '! Set Source Directory
+    '!
+    '!@param  theArg     string:Source Directory
+    '!@return            True: Success, False: Error
+    Public Function setSourceDir(theArg)
+        If (theArg <> "") Then
+            ArgS = theArg
+            setSourceDir = True : Exit Function
+        End If
+        setSourceDir = False
+    End Function
+
+    '
+    '! Set Destination Directory
+    '!
+    '!@param  theArg     string:Destination Directory
+    '!@return            True: Success, False: Error
+    Public Function setDestDir(theArg)
+        If (theArg <> "") Then
+            ArgD = theArg
+            setDestDir = True : Exit Function
+        End If
+        setDestDir = False
+    End Function
+
+    '! Debug Flg On/Off
+    '!
+    '! @param  theFlg     boolean:true/on, false/off
+    Public Function setDebugFlg(theFlg)
+        ArgT = theFlg
+    End Function
+
+    '! Verify Flg On/Off
+    '!
+    '! @param  theFlg     boolean:true/on, false/off
+    Public Function setVerifyFlg(theFlg)
+        ArgV = theFlg
+    End Function
+
+    '! Quiet Flg On/Off
+    '!
+    '! @param  theFlg     boolean:true/on, false/off
+    Public Function setQuietFlg(theFlg)
+        ArgQ = theFlg
+    End Function
+
+    '
+    '! Command Generate
+    '!
+    '!@param  void
+    '!@return             mixed: String/command, False/error
+    Public Function genCommand()
+        If (ArgS = "" or ArgD = "") Then
+            genCommand = False
+            Exit Function
+        End If
+
+        Dim opt : opt = " /d /e /f /h /i /k /r /y"
+        If (ArgT) Then opt = opt & " /l"
+        If (ArgV) Then opt = opt & " /v"
+        If (ArgQ) Then opt = opt & " /q"
+        genCommand = "xcopy " & ArgS & " " & ArgD & opt
+    End Function
+
+    ' Options
+    Private ArgS   'source
+    Private ArgD   'destination
+    Private ArgT   'test run
+    Private ArgV   'verify
+    Private ArgQ   'quiet mode
+
+    Private Sub Class_Initialize
+    End Sub
+
+    Private Sub Class_Terminate
+    End Sub
+End Class
